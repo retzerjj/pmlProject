@@ -1,0 +1,144 @@
+---
+title: "Predicting Exercise Activity from Belt, Forearm, Arm, and Dumbell Accelerometers"
+author: "Joseph Retzer"
+---
+
+# Preliminaries, reading / cleaning / subsetting data: 
+
+## Read in training and test data
+
+```{r readData, fig.width = 10, fig.height = 6, echo=TRUE}
+  setwd("~/Documents/My Documents/Coursera/DataScienceTrack/PracticalMachineLearning/project/data")
+  library(Amelia); library(caret); library(xgboost); library(Ckmeans.1d.dp); library(data.table)
+
+  trainDat <- read.csv(file = "pml-training.csv", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, strip.white = TRUE, na.strings=c(""," ","NA"))
+  names(trainDat) <- tolower(names(trainDat))
+  names(trainDat)[1] <- "record"
+
+  testDat  <- read.csv(file = "pml-testing.csv",  header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, strip.white = TRUE, na.strings=c(""," ","NA"))
+  names(testDat) <- tolower(names(testDat))
+  names(testDat)[1] <- "record"
+
+  missmap(trainDat)         # view missing pattern
+```
+
+The missing data mapping shows clearly that variables are either complete (no missings) or virtually empty. The next step involves identifying all variables with
+mostly missing values and dropping them from the data sets. Additional non-informative variables are also eliminated.
+
+```{r dropMissing, echo=TRUE}
+ # find variables w/ virtually all missing
+  propmiss <- function(dataframe) {
+     m <- sapply(dataframe, function(x) {
+      data.frame(
+      nmiss=sum(is.na(x)), 
+      n=length(x), 
+      propmiss=sum(is.na(x))/length(x)
+      )
+     })
+     d <- data.frame(t(m))
+     d <- sapply(d, unlist)
+     d <- as.data.frame(d)
+     d$variable <- row.names(d)
+     row.names(d) <- NULL
+     d <- cbind(d[ncol(d)],d[-ncol(d)])
+     return(d[order(d$propmiss), ])
+     }
+
+  # show same set of variables have have approx 98% missing in both training and test data sets
+
+   trainProp <-  propmiss(trainDat); testProp  <-  propmiss(trainDat)    # prop of missing either 0 or 98%
+   missTrain <- subset(trainProp, select=variable, nmiss != 0); missTest <- subset(testProp, select=variable, nmiss != 0) # high miss var names
+   # cbind(missTrain, missTest)         # show 98% missing variables same in both data sets
+
+   # drop all vars with 98% missing values
+   
+   trainDat2 <- subset(trainDat, select = !(names(trainDat) %in% as.character(missTrain$variable)))
+   testDat2  <- subset(testDat,  select = !(names(testDat)  %in% as.character(missTest$variable)))
+
+   trainDat2$classe <- as.factor(trainDat2$classe)
+
+   # also drop non-informative variables: record   
+
+   dropVars  <- c("raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "num_window", "problem_id", "user_name", "record", "new_window")
+
+   trainDat3 <- subset(trainDat2, select = !(names(trainDat2) %in% dropVars))
+```
+
+#  Model Building Process
+
+This paper predicts exercise activity:
+
+      A. sitting-down, 
+      B. standing-up, 
+      C. standing, 
+      D. walking, 
+      E. sitting
+
+using accelererometer data from: 
+
+      A. Belt, 
+      B. Forearm 
+      B. Arm
+      B. Dumbell 
+
+## Cross Validation in Model Building 
+
+Three models were built: gbm, lda and xgbTree. Cross validation was employed using the "train" function from the caret package. 
+
+```{r modelBuilding, echo=TRUE}
+  inTrain  = createDataPartition(trainDat3$classe, p = 3/4)[[1]]
+  training = trainDat3[ inTrain,]
+  testing  = trainDat3[-inTrain,] 
+
+  set.seed(8675309) 
+
+     fitControl <- trainControl(method = "cv", number = 10, repeats = 2, search = "random")
+
+   # mod2 <- train(classe ~.,method="gbm",    data=training)
+   #    save(mod2,file="gbmMod2.RData")
+    load("~/Documents/My Documents/Coursera/DataScienceTrack/PracticalMachineLearning/project/data/gbmMod2.RData")
+    
+   # mod3 <- train(classe ~.,method="lda"    ,data=training)
+   #    save(mod3,file="ldaMod3.RData")
+    load("~/Documents/My Documents/Coursera/DataScienceTrack/PracticalMachineLearning/project/data/ldaMod3.RData")
+    
+   # mod4 <- train(classe ~.,method="xgbTree",data=training, trControl = fitControl)  
+   #    save(mod4,file="xgboostMod4.RData")
+    load("~/Documents/My Documents/Coursera/DataScienceTrack/PracticalMachineLearning/project/data/xgboostMod4.Rdata")
+```
+
+## Expected Out of Sample Error 
+
+Each models predictive performance was compared by predicting the hold out test data.
+
+```{r predictiveError, echo=TRUE}
+ # predictive performance on testing data
+        pred2 <- predict(mod2,testing); tbl2 <- table(pred2,testing$classe);  tbl2; sum(diag(as.matrix(tbl2)))/sum(as.matrix(tbl2))
+        pred3 <- predict(mod3,testing); tbl3 <- table(pred3,testing$classe);  tbl3; sum(diag(as.matrix(tbl3)))/sum(as.matrix(tbl3))
+        pred4 <- predict(mod4,testing); tbl4 <- table(pred4,testing$classe);  tbl4; sum(diag(as.matrix(tbl4)))/sum(as.matrix(tbl4))
+```
+Predictive accuracy:
+
+     1. GBM:     .971   (Error = 1 - .971 = .029) 
+     2. LDA:     .702   (Error = 1 - .702 = .298) 
+     3: XGBoost: .999   (Error = 1 - .999 = .001)
+
+#  Choices made 
+
+Varibles with extreme nubers of missing were dropped as they could not be reliably imputed. Multiple models were fit using all the data
+and compared based on predictive accuracy to see if:
+  
+    1. additional data transformations were necessary
+    2. which model proved best
+    
+It was clear that the predictive performance of the xgboost algorithm was far superior to the others.
+In addition since its accuracy was remarkable high, no additional transformations were felt necessary and the xgboos model chosen for prediction.
+
+Prediction for the test data provided (w/o labels) was performed as follows:
+
+```{r predictiveTest, echo=TRUE}
+        predTest <- predict(mod4,testDat2)
+        predTest
+```
+
+
