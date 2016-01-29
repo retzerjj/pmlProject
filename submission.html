@@ -146,9 +146,10 @@ img {
   B. Forearm 
   B. Arm
   B. Dumbell </code></pre>
-<div id="cross-validation-in-model-building" class="section level2">
-<h2>Cross Validation in Model Building</h2>
-<p>Three models were built: gbm, lda and xgbTree. Cross validation was employed using the “train” function from the caret package.</p>
+<div id="k-fold-cross-validation-in-model-building" class="section level2">
+<h2>K-fold Cross Validation in Model Building</h2>
+<p>The k-fold cross validation method involves splitting the dataset into k-subsets. For each subset is held out while the model is trained on all other subsets. This process is completed until accuracy is determine for each instance in the dataset, and an overall accuracy estimate is provided.</p>
+<p>Three models were built: gbm, lda and xgbTree. K-fold cross validation was employed using the “train” function from the caret package.</p>
 <pre class="r"><code>  inTrain  = createDataPartition(trainDat3$classe, p = 3/4)[[1]]
   training = trainDat3[ inTrain,]
   testing  = trainDat3[-inTrain,] 
@@ -169,11 +170,148 @@ img {
    #    save(mod4,file=&quot;xgboostMod4.RData&quot;)
     load(&quot;~/Documents/My Documents/Coursera/DataScienceTrack/PracticalMachineLearning/project/data/xgboostMod4.Rdata&quot;)</code></pre>
 </div>
+<div id="cv-based-model-performance" class="section level2">
+<h2>CV based Model Performance</h2>
+<p>Each models final parameter set was determined by comparing k-fold CV averaged predictive performace shown below:</p>
+<pre class="r"><code>  mod2</code></pre>
+<pre><code>## Stochastic Gradient Boosting 
+## 
+## 14718 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Bootstrapped (25 reps) 
+## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718, 14718, ... 
+## Resampling results across tuning parameters:
+## 
+##   interaction.depth  n.trees  Accuracy   Kappa      Accuracy SD
+##   1                   50      0.7492613  0.6821643  0.007317127
+##   1                  100      0.8181972  0.7699285  0.006380304
+##   1                  150      0.8514757  0.8120643  0.005421326
+##   2                   50      0.8525278  0.8131679  0.005951952
+##   2                  100      0.9052730  0.8801090  0.004228898
+##   2                  150      0.9291965  0.9104029  0.003598788
+##   3                   50      0.8950922  0.8671728  0.005041517
+##   3                  100      0.9387051  0.9224373  0.003556771
+##   3                  150      0.9574623  0.9461809  0.002927828
+##   Kappa SD   
+##   0.009255667
+##   0.008071090
+##   0.006853474
+##   0.007555691
+##   0.005333718
+##   0.004532515
+##   0.006344975
+##   0.004467551
+##   0.003675014
+## 
+## Tuning parameter 'shrinkage' was held constant at a value of 0.1
+## 
+## Tuning parameter 'n.minobsinnode' was held constant at a value of 10
+## Accuracy was used to select the optimal model using  the largest value.
+## The final values used for the model were n.trees = 150,
+##  interaction.depth = 3, shrinkage = 0.1 and n.minobsinnode = 10.</code></pre>
+<pre class="r"><code>  mod3</code></pre>
+<pre><code>## Linear Discriminant Analysis 
+## 
+## 14718 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Bootstrapped (25 reps) 
+## Summary of sample sizes: 14718, 14718, 14718, 14718, 14718, 14718, ... 
+## Resampling results
+## 
+##   Accuracy   Kappa      Accuracy SD  Kappa SD   
+##   0.7001334  0.6207655  0.005738434  0.007242442
+## 
+## </code></pre>
+<pre class="r"><code>  mod4</code></pre>
+<pre><code>## eXtreme Gradient Boosting 
+## 
+## 14718 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 13246, 13248, 13246, 13245, 13246, 13245, ... 
+## Resampling results across tuning parameters:
+## 
+##   eta         max_depth  gamma      colsample_bytree  min_child_weight
+##   0.05849168  2          0.2998670  0.4323682         17              
+##   0.05849168  2          0.5135390  0.4160469          0              
+##   0.05849168  2          0.7682912  0.5093364         17              
+##   0.05849168  2          4.4426655  0.5671522          9              
+##   0.05849168  2          5.1946720  0.3418706         20              
+##   0.05849168  2          5.6547822  0.4323682         17              
+##   0.05849168  2          6.9664761  0.5093364         17              
+##   0.05849168  2          8.1115694  0.4160469          0              
+##   0.05849168  2          8.7137345  0.3418706         20              
+##   0.05849168  2          9.5361553  0.5671522          9              
+##   0.22170471  9          0.5830640  0.5187909          3              
+##   0.22170471  9          0.7620013  0.5187909          3              
+##   0.22170471  9          1.2456287  0.3454626          2              
+##   0.22170471  9          2.6387740  0.5369308          3              
+##   0.22170471  9          2.8565179  0.3060554          9              
+##   0.22170471  9          4.1552519  0.4384999         13              
+##   0.22170471  9          6.7497977  0.5369308          3              
+##   0.22170471  9          8.1892965  0.4384999         13              
+##   0.22170471  9          8.6974608  0.3060554          9              
+##   0.22170471  9          8.9321864  0.3454626          2              
+##   0.48783587  8          0.5833858  0.3179095          2              
+##   0.48783587  8          2.3892724  0.6907137         11              
+##   0.48783587  8          2.4203794  0.6907137         11              
+##   0.48783587  8          3.0376060  0.4144921         17              
+##   0.48783587  8          6.4622404  0.3782736          6              
+##   0.48783587  8          7.7744741  0.3434315         14              
+##   0.48783587  8          9.2232623  0.3179095          2              
+##   0.48783587  8          9.6264240  0.4144921         17              
+##   0.48783587  8          9.8229270  0.3434315         14              
+##   0.48783587  8          9.9208665  0.3782736          6              
+##   nrounds  Accuracy   Kappa      Accuracy SD  Kappa SD   
+##    18      0.7223779  0.6465654  0.010910397  0.013940677
+##   362      0.9281813  0.9091441  0.008860984  0.011234637
+##   746      0.9663669  0.9574557  0.003620373  0.004578866
+##   943      0.9614745  0.9512659  0.005603228  0.007087998
+##    80      0.8203542  0.7721624  0.011075869  0.014124158
+##   273      0.9103790  0.8865921  0.010279070  0.013020066
+##   586      0.9480885  0.9343197  0.005728371  0.007260284
+##   819      0.9462543  0.9320041  0.007204564  0.009127269
+##    38      0.7652521  0.7016791  0.015049132  0.019045218
+##   930      0.9400034  0.9240856  0.006217394  0.007875580
+##   869      0.9949037  0.9935539  0.002033319  0.002572045
+##   341      0.9947678  0.9933821  0.001472058  0.001861618
+##   316      0.9932050  0.9914048  0.002175326  0.002752018
+##    89      0.9902832  0.9877091  0.002380330  0.003010559
+##   572      0.9910307  0.9886545  0.001568004  0.001983528
+##   373      0.9881097  0.9849600  0.001577637  0.001994815
+##   354      0.9840329  0.9798024  0.001674071  0.002116351
+##   427      0.9828104  0.9782543  0.002479202  0.003140612
+##   160      0.9800245  0.9747330  0.002029855  0.002564821
+##   609      0.9820631  0.9773099  0.001898180  0.002401861
+##   255      0.9936130  0.9919217  0.002291853  0.002898708
+##   303      0.9886519  0.9856464  0.002782721  0.003520048
+##   898      0.9900789  0.9874513  0.002708748  0.003426890
+##   508      0.9889245  0.9859900  0.002270239  0.002872315
+##   120      0.9819277  0.9771410  0.002733678  0.003457022
+##   132      0.9794139  0.9739573  0.003414661  0.004320329
+##   233      0.9779174  0.9720662  0.003505203  0.004434325
+##   622      0.9783252  0.9725804  0.001942633  0.002461842
+##   603      0.9771703  0.9711216  0.002782059  0.003519716
+##   128      0.9766272  0.9704350  0.002358687  0.002983131
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final values used for the model were nrounds = 869, max_depth = 9,
+##  eta = 0.2217047, gamma = 0.583064, colsample_bytree = 0.5187909
+##  and min_child_weight = 3.</code></pre>
+</div>
 <div id="expected-out-of-sample-error" class="section level2">
 <h2>Expected Out of Sample Error</h2>
-<p>Each models predictive performance was compared by predicting the hold out test data.</p>
-<pre class="r"><code> # predictive performance on testing data
-        pred2 &lt;- predict(mod2,testing); tbl2 &lt;- table(pred2,testing$classe);  tbl2; sum(diag(as.matrix(tbl2)))/sum(as.matrix(tbl2))</code></pre>
+<p>Each models expected predictive performance was estimated by predicting the hold out test data.</p>
+<pre class="r"><code>        pred2 &lt;- predict(mod2,testing); confusionMatrix(pred2,testing$classe)</code></pre>
 <pre><code>## Loading required package: gbm
 ## Loading required package: survival
 ## 
@@ -187,34 +325,103 @@ img {
 ## Loading required package: parallel
 ## Loaded gbm 2.1.1
 ## Loading required package: plyr</code></pre>
-<pre><code>##      
-## pred2    A    B    C    D    E
-##     A 1373   15    0    1    0
-##     B   15  912   21    7    9
-##     C    3   22  820   27   10
-##     D    3    0   12  765    9
-##     E    1    0    2    4  873</code></pre>
-<pre><code>## [1] 0.9671697</code></pre>
-<pre class="r"><code>        pred3 &lt;- predict(mod3,testing); tbl3 &lt;- table(pred3,testing$classe);  tbl3; sum(diag(as.matrix(tbl3)))/sum(as.matrix(tbl3))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1380   24    0    0    1
+##          B   10  903   16    6    6
+##          C    1   22  826   33    8
+##          D    3    0   13  761   10
+##          E    1    0    0    4  876
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9678          
+##                  95% CI : (0.9625, 0.9725)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9592          
+##  Mcnemar's Test P-Value : 7.563e-06       
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9892   0.9515   0.9661   0.9465   0.9723
+## Specificity            0.9929   0.9904   0.9842   0.9937   0.9988
+## Pos Pred Value         0.9822   0.9596   0.9281   0.9670   0.9943
+## Neg Pred Value         0.9957   0.9884   0.9928   0.9896   0.9938
+## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+## Detection Rate         0.2814   0.1841   0.1684   0.1552   0.1786
+## Detection Prevalence   0.2865   0.1919   0.1815   0.1605   0.1796
+## Balanced Accuracy      0.9911   0.9710   0.9751   0.9701   0.9855</code></pre>
+<pre class="r"><code>        pred3 &lt;- predict(mod3,testing); confusionMatrix(pred3,testing$classe)</code></pre>
 <pre><code>## Loading required package: MASS</code></pre>
-<pre><code>##      
-## pred3    A    B    C    D    E
-##     A 1130  143   80   47   37
-##     B   38  600   78   28  157
-##     C  117  118  576   93   85
-##     D  107   38   97  595   87
-##     E    3   50   24   41  535</code></pre>
-<pre><code>## [1] 0.7006525</code></pre>
-<pre class="r"><code>        pred4 &lt;- predict(mod4,testing); tbl4 &lt;- table(pred4,testing$classe);  tbl4; sum(diag(as.matrix(tbl4)))/sum(as.matrix(tbl4))</code></pre>
-<pre><code>##      
-## pred4    A    B    C    D    E
-##     A 1395    0    0    0    0
-##     B    0  948    2    0    0
-##     C    0    1  851    1    0
-##     D    0    0    2  802    0
-##     E    0    0    0    1  901</code></pre>
-<pre><code>## [1] 0.9985726</code></pre>
-<p>Predictive accuracy:</p>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1122  152   87   50   34
+##          B   29  612   78   27  164
+##          C  114  123  545   97   75
+##          D  126   28  121  593   87
+##          E    4   34   24   37  541
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.696           
+##                  95% CI : (0.6829, 0.7088)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.6154          
+##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.8043   0.6449   0.6374   0.7376   0.6004
+## Specificity            0.9080   0.9247   0.8990   0.9117   0.9753
+## Pos Pred Value         0.7765   0.6725   0.5713   0.6209   0.8453
+## Neg Pred Value         0.9211   0.9156   0.9215   0.9466   0.9156
+## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+## Detection Rate         0.2288   0.1248   0.1111   0.1209   0.1103
+## Detection Prevalence   0.2947   0.1856   0.1945   0.1947   0.1305
+## Balanced Accuracy      0.8561   0.7848   0.7682   0.8246   0.7879</code></pre>
+<pre class="r"><code>        pred4 &lt;- predict(mod4,testing); confusionMatrix(pred4,testing$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1395    0    0    0    0
+##          B    0  948    0    0    0
+##          C    0    1  853    0    0
+##          D    0    0    2  803    0
+##          E    0    0    0    1  901
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9992          
+##                  95% CI : (0.9979, 0.9998)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.999           
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   0.9989   0.9977   0.9988   1.0000
+## Specificity            1.0000   1.0000   0.9998   0.9995   0.9998
+## Pos Pred Value         1.0000   1.0000   0.9988   0.9975   0.9989
+## Neg Pred Value         1.0000   0.9997   0.9995   0.9998   1.0000
+## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+## Detection Rate         0.2845   0.1933   0.1739   0.1637   0.1837
+## Detection Prevalence   0.2845   0.1933   0.1741   0.1642   0.1839
+## Balanced Accuracy      1.0000   0.9995   0.9987   0.9991   0.9999</code></pre>
+<p>Overall expected error rate:</p>
 <pre><code> 1. GBM:     .971   (Error = 1 - .971 = .029) 
  2. LDA:     .702   (Error = 1 - .702 = .298) 
  3: XGBoost: .999   (Error = 1 - .999 = .001)</code></pre>

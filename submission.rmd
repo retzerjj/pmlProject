@@ -81,9 +81,13 @@ using accelererometer data from:
       B. Arm
       B. Dumbell 
 
-## Cross Validation in Model Building 
+## K-fold Cross Validation in Model Building 
 
-Three models were built: gbm, lda and xgbTree. Cross validation was employed using the "train" function from the caret package. 
+The k-fold cross validation method involves splitting the dataset into k-subsets. For each subset is held out while the model is 
+trained on all other subsets. This process is completed until accuracy is determine for each instance in the dataset, and an 
+overall accuracy estimate is provided.
+
+Three models were built: gbm, lda and xgbTree. K-fold cross validation was employed using the "train" function from the caret package. 
 
 ```{r modelBuilding, echo=TRUE}
   inTrain  = createDataPartition(trainDat3$classe, p = 3/4)[[1]]
@@ -107,17 +111,26 @@ Three models were built: gbm, lda and xgbTree. Cross validation was employed usi
     load("~/Documents/My Documents/Coursera/DataScienceTrack/PracticalMachineLearning/project/data/xgboostMod4.Rdata")
 ```
 
+## CV based Model Performance
+
+Each models final parameter set was determined by comparing k-fold CV averaged predictive performace shown below:
+
+```{r CVpredictivePerf, echo=TRUE}
+  mod2
+  mod3
+  mod4
+```
+
 ## Expected Out of Sample Error 
 
-Each models predictive performance was compared by predicting the hold out test data.
+Each models expected predictive performance was estimated by predicting the hold out test data.
 
 ```{r predictiveError, echo=TRUE}
- # predictive performance on testing data
-        pred2 <- predict(mod2,testing); tbl2 <- table(pred2,testing$classe);  tbl2; sum(diag(as.matrix(tbl2)))/sum(as.matrix(tbl2))
-        pred3 <- predict(mod3,testing); tbl3 <- table(pred3,testing$classe);  tbl3; sum(diag(as.matrix(tbl3)))/sum(as.matrix(tbl3))
-        pred4 <- predict(mod4,testing); tbl4 <- table(pred4,testing$classe);  tbl4; sum(diag(as.matrix(tbl4)))/sum(as.matrix(tbl4))
+        pred2 <- predict(mod2,testing); confusionMatrix(pred2,testing$classe)
+        pred3 <- predict(mod3,testing); confusionMatrix(pred3,testing$classe)
+        pred4 <- predict(mod4,testing); confusionMatrix(pred4,testing$classe)
 ```
-Predictive accuracy:
+Overall expected error rate:
 
      1. GBM:     .971   (Error = 1 - .971 = .029) 
      2. LDA:     .702   (Error = 1 - .702 = .298) 
