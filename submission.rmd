@@ -115,7 +115,8 @@ Three models were built: gbm, lda and xgbTree. K-fold cross validation was emplo
 
 Each models final parameter set was determined by comparing k-fold CV averaged predictive performace shown below:
 
-```{r CVpredictivePerf, echo=TRUE}
+```{r CVpredPerf, echo=TRUE}
+# CV results
   mod2
   mod3
   mod4
@@ -125,7 +126,8 @@ Each models final parameter set was determined by comparing k-fold CV averaged p
 
 Each models expected predictive performance was estimated by predicting the hold out test data.
 
-```{r predictiveError, echo=TRUE}
+```{r predError, echo=TRUE}
+# Expected Performance
         pred2 <- predict(mod2,testing); confusionMatrix(pred2,testing$classe)
         pred3 <- predict(mod3,testing); confusionMatrix(pred3,testing$classe)
         pred4 <- predict(mod4,testing); confusionMatrix(pred4,testing$classe)
